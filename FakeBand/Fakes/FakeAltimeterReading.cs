@@ -5,7 +5,13 @@ namespace FakeBand.Fakes
 {
     public class FakeAltimeterReading : IBandAltimeterReading
     {
+        public FakeAltimeterReading(float rate)
+        {
+            _rate = rate;
+        }
+
         Random rnd = new Random();
+        private float _rate;
 
         public long FlightsAscended
         {
@@ -27,7 +33,7 @@ namespace FakeBand.Fakes
         {
             get
             {
-                return 10 * rnd.Next();
+                return _rate;
             }
         }
 
@@ -84,6 +90,22 @@ namespace FakeBand.Fakes
             get
             {
                 return 500 * rnd.Next();
+            }
+        }
+
+        public long FlightsAscendedToday
+        {
+            get
+            {
+                return 2;
+            }
+        }
+
+        public long TotalGainToday
+        {
+            get
+            {
+                return 3;
             }
         }
     }

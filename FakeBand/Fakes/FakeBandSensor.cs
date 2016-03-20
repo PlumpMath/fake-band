@@ -1,7 +1,9 @@
-﻿using Microsoft.Band;
+﻿using FakeBand.Utils;
+using Microsoft.Band;
 using Microsoft.Band.Sensors;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,14 +12,17 @@ namespace FakeBand.Fakes
 {
     public abstract class FakeBandSensor<T> : IBandSensor<T> where T : IBandSensorReading
     {
-        public FakeBandSensor()
+        internal FakeBandSensor(IEnumerable<BandType> supportedBandClasses, Dictionary<TimeSpan, SubscriptionType> supportedReportingSubscriptions, BandTypeConstants type)
         {
-
+            _supportedReportingSubscriptions = supportedReportingSubscriptions;
+            _isSupported = supportedBandClasses.Contains(type.BandType);
+            _reportingInterval = _supportedReportingSubscriptions.Keys.FirstOrDefault();
         }
 
+        private bool _isSupported;
         public virtual bool IsSupported
         {
-            get { return true; }
+            get { return _isSupported; }
         }
 
         private TimeSpan _reportingInterval = TimeSpan.FromSeconds(1);
@@ -28,20 +33,23 @@ namespace FakeBand.Fakes
             {
                 return _reportingInterval;
             }
-
             set
             {
-                if (_reportingInterval == value)
-                    return;
+                if (!_supportedReportingSubscriptions.Keys.Contains(value))
+                {
+                    throw new ArgumentOutOfRangeException(BandResource.UnsupportedSensorInterval);
+                }
                 _reportingInterval = value;
             }
         }
+
+        protected Dictionary<TimeSpan, SubscriptionType> _supportedReportingSubscriptions;
 
         public virtual IEnumerable<TimeSpan> SupportedReportingIntervals
         {
             get
             {
-                throw new NotImplementedException();
+                return _supportedReportingSubscriptions.Keys;
             }
         }
 
@@ -72,23 +80,55 @@ namespace FakeBand.Fakes
         }
 
         public abstract IBandSensorReading CreateReading();
+        public abstract bool HasReadingChanged(IBandSensorReading newReading);
 
         private bool Subscribe()
         {
-            // use an rx observable to simulate the sensor
-            var obs = Observable.Interval(ReportingInterval);
-            _subscription = obs.Subscribe(l =>
+            TimeSpan interval;
+            if (FakeBandClientManager.Instance.UnitTesting)
+                interval = FakeBandClientManager.Instance.TestSensorInterval;
+            else
+                interval = ReportingInterval;
+
+            bool ret = false;
+            if (interval <= TimeSpan.Zero)
             {
-                var rc = ReadingChanged;
-                if (rc == null)
-                    return;
+                // Only fire an update if the value has changed (poll for change every second?)
+                var obs = Observable.Interval(TimeSpan.FromSeconds(1));
+                _subscription = obs.Subscribe(l =>
+                {
+                    var rc = ReadingChanged;
+                    if (rc == null)
+                        return;
 
-                var t = (T)CreateReading();
+                    var t = (T)CreateReading();
+                    if (!HasReadingChanged(t))
+                        return;
 
-                BandSensorReadingEventArgs<T> e = new BandSensorReadingEventArgs<T>(t);
-                rc(this, e);
-            });
-            return true;
+                    BandSensorReadingEventArgs<T> e = new BandSensorReadingEventArgs<T>(t);
+                    rc(this, e);
+                });
+
+                ret = true;
+            }
+            else
+            {
+                // use an rx observable to simulate the sensor
+                var obs = Observable.Interval(interval);
+                _subscription = obs.Subscribe(l =>
+                {
+                    var rc = ReadingChanged;
+                    if (rc == null)
+                        return;
+
+                    var t = (T)CreateReading();
+
+                    BandSensorReadingEventArgs<T> e = new BandSensorReadingEventArgs<T>(t);
+                    rc(this, e);
+                });
+                ret = true;
+            }
+            return ret;
         }
 
         public Task<bool> StartReadingsAsync(CancellationToken token)

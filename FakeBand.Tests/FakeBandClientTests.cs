@@ -24,9 +24,6 @@ namespace FakeBand.Tests
                 isConsented = await sensor.RequestUserConsentAsync();
             }
 
-            // To make the tests run quicker
-            sensor.ReportingInterval = TimeSpan.FromMilliseconds(500);
-
             var tcs = new TaskCompletionSource<int>();
             if (isConsented || uc == UserConsent.Granted)
             {
@@ -34,7 +31,9 @@ namespace FakeBand.Tests
                 {
                     // Set arbitrary result value
                     if (tcs.Task.Status != TaskStatus.RanToCompletion && tcs.Task.Status != TaskStatus.Faulted)
+                    {
                         tcs.SetResult(5858);
+                    }
                 };
                 await sensor.StartReadingsAsync();
             }
@@ -55,7 +54,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectHeartRateAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.HeartRate, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.HeartRate, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -64,7 +63,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectSkinTempAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.SkinTemperature, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.SkinTemperature, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -73,7 +72,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectUVAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.UV, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.UV, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -82,7 +81,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectCaloriesAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.Calories, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.Calories, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -91,7 +90,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectAltimeterAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.Altimeter, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.Altimeter, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -100,7 +99,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectAmbientLightAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.AmbientLight, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.AmbientLight, 500, 5858);
             
             Assert.Equal(5858, res);
         }
@@ -109,7 +108,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectRRIntervalAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.RRInterval, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.RRInterval, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -118,7 +117,7 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectPedometerAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.Pedometer, 5000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.Pedometer, 500, 5858);
 
             Assert.Equal(5858, res);
         }
@@ -127,7 +126,16 @@ namespace FakeBand.Tests
         public async Task FakeBandClient_TestValueReceived_ConnectContactAndReceiveOneValue()
         {
             var bandClient = await TestUtils.GetBandClientAsync();
-            var res = await SetupSensor(bandClient.SensorManager.Contact, 50000, 5858);
+            var res = await SetupSensor(bandClient.SensorManager.Contact, 500, 5858);
+
+            Assert.Equal(5858, res);
+        }
+
+        [Fact]
+        public async Task FakeBandClient_TestValueReceived_ConnectDistanceAndReceiveOneValue()
+        {
+            var bandClient = await TestUtils.GetBandClientAsync();
+            var res = await SetupSensor(bandClient.SensorManager.Distance, 500, 5858);
 
             Assert.Equal(5858, res);
         }

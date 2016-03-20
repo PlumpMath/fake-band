@@ -6,17 +6,27 @@ namespace FakeBand.Fakes
     public class FakeBandPedometerReading : IBandPedometerReading
     {
         private readonly int _steps;
+        private DateTimeOffset _timestamp;
 
-        public FakeBandPedometerReading(int steps)
+        public FakeBandPedometerReading(int steps, DateTimeOffset timestamp)
         {
             _steps = steps;
+            _timestamp = timestamp;
+        }
+
+        public long StepsToday
+        {
+            get
+            {
+                return 210;
+            }
         }
 
         public DateTimeOffset Timestamp
         {
             get
             {
-                return  DateTimeOffset.Now;
+                return _timestamp;
             }
         }
 
